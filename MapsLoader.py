@@ -19,8 +19,7 @@
 """
 
 import requests
-import WorldLattice
-import AlgorithmicMemory
+from mapsloader import WorldLattice, AlgorithmicMemory
 from math import cos, sin, radians
 
 def geocode_address(address, api_key):
@@ -68,9 +67,12 @@ def get_altitude_for_multiple_locations(locations, api_key):
 precision_factor = 1000
 
 # Main script to populate lattice and visualize
-if __name__ == "__main__":
+def initializeLattice(city = None, region = None):
     # Convert address to GPS coordinates using Google Geocoding API
-    start_address = "3508 Red Rock Dr, Moab UT 84532"
+    if city is None:
+        start_address = "3508 Red Rock Dr, Moab UT 84532"
+    else:
+        start_address = city + ", " + region
     # start_address = "Herald Square, New York, NY"
     # start_address = "ul. Jacka Szarskiego 20a, 30-698 Krakow, Poland"
     start_lat, start_lon = geocode_address(start_address, GOOGLE_API_KEY)
@@ -130,6 +132,8 @@ if __name__ == "__main__":
     latticecopy = WorldLattice.WorldLattice.deserialize('lat_test0.dat')
 
     latticecopy.visualize_lattice()
+
+    return latticecopy
 
     # In memory browser:
     # AlgorithmicMemory.inspectDBit( latticecopy.am.last_rv, latticecopy.am )

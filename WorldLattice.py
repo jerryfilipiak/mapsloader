@@ -2,7 +2,7 @@ import os
 import pickle
 import matplotlib
 import matplotlib.pyplot as plt
-import AlgorithmicMemory as am
+from mapsloader import AlgorithmicMemory as am
 matplotlib.use('WebAgg')
 
 directory = 'dbits'
