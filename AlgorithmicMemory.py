@@ -415,6 +415,21 @@ class AlgorithmicMemory:
         self.last_rv = None
         
         self.initialize_head(self.headx, self.heady, self.headz)
+        
+        # Initialize dbits and head
+        self.move_head(-1, 0, 0)
+        self.move_head(0, -1, 0)
+        self.move_head(0, 0, -1)
+
+        self.move_head_abs(-4,-4,-4)
+
+        self.move_head(2, 2, 2)
+
+        self.insert("one", 1, 1, 1)
+        self.insert("neg_one", -1, -1, -1)
+
+        self.prune(1, 1, 1)
+        self.prune(-1, -1, -1)
 
     def insert_dbit(self, dbit):
 
@@ -651,6 +666,23 @@ class AlgorithmicMemory:
         self.last_rv = self.move_head(x-self.headx, y-self.heady, z-self.headz)
         return self.last_rv
 
+    def prune(self, x, y, z):
+
+        dbit = self.move_head_abs(x-1,y-1,z-1)
+        lbit_idx = dbit.lbit0
+
+        while lbit_idx != lbit_idx.other.other:
+            lbit_idx = lbit_idx.other
+
+        self.dbit_list.remove(lbit_idx.dbit)
+
+        # xm.other = other.xp
+        lbit_idx.x.other = lbit_idx.other.x
+        lbit_idx.other.x.other = lbit_idx.x
+
+        return lbit_idx.dbit
+
+
     def insert(self, data, x, y, z):
         if verbosity != 0:
             print("\n.")
@@ -718,22 +750,14 @@ def inspectDBit(dbit, am :AlgorithmicMemory):
         elif command == 'ot':
             current_bit = current_bit.lbit0.other.dbit
         elif command == 'pr':
-            print("printing...")
+            rv = print(am.prune(current_bit.x, current_bit.y, current_bit.z))
+            current_bit = am.cursor()
         elif command == 'cb':
             if current_bit == None:
                 current_bit = am.source
             print(latticeModel(current_bit))
         elif command == 'cl':
-            lattice.debug_clear()
             current_bit = None
-        elif command == 'in1':
-            current_bit = lattice.insert("one", 1, 1, 1)
-        elif command == 'in01':
-            current_bit = lattice.insert("y1", 0, 1, 0)
-        elif command == 'in0':
-            current_bit = lattice.insert("origin", 0, 0, 0)
-        elif command == 'lbin':
-            lattice.bot.insert(current_bit)
         elif command == 'rb':
             print("\n".join(current_bit.return_box()))
         elif command == 'lm':

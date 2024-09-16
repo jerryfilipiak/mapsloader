@@ -19,6 +19,7 @@
 """
 
 import requests
+import os
 from mapsloader import WorldLattice, AlgorithmicMemory
 from math import cos, sin, radians
 
@@ -33,7 +34,8 @@ def geocode_address(address, api_key):
     raise ValueError("Failed to geocode address")
 
 # Google API functions
-GOOGLE_API_KEY = 'AIzaSyAb59YZVZEVdzZeJDV8b05Bur5rl9xsY7Y'
+GOOGLE_API_KEY = os.environ.get('SN_GM_API_KEY')
+print (GOOGLE_API_KEY)
 
 def get_altitude_for_multiple_locations(locations, api_key):
     """

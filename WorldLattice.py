@@ -5,18 +5,33 @@ import matplotlib.pyplot as plt
 from mapsloader import AlgorithmicMemory as am
 matplotlib.use('WebAgg')
 
-directory = 'dbits'
+main_directory = 'dbits'
+
+def file_path_for_coords(x, y, z):
+
+    return main_directory + '/' + str(x) + "_" + str(y) + "_" + str(z) + "_lattice"
 
 class WorldLattice:
-    def __init__(self, filepath = None):
+    def __init__(self, x, y, z, filepath = None):
         self.am = am.AlgorithmicMemory()
+        self.x = x
+        self.y = y
+        self.z = z
         self.filepath = filepath
 
     def insert(self, data, x, y, z):
 
-        return self.am.insert(data, x, y, z)
+        return self.am.insert(data, x-self.x,  y-self.y, z-self.z)
+
+    def get(self, x, y, z):
+
+        return self.am.move_head_abs(x, y, z)
 
     def serialize(self):
+        directory = file_path_for_coords(self.x, self.y, self.z)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
         def write(file, dbit, sign, axis = 'data'):
             if sign == 'x' or sign == 'y' or sign == 'z':
                 attr = getattr(dbit, sign)
@@ -31,32 +46,39 @@ class WorldLattice:
                 pickle.dump(None, file)
 
         for dbit in self.am.dbit_list:
-            with open("dbits/" + str(dbit.lbit0.tr) + str(dbit.lbit1.tr) + ".dbit", 'wb') as file:
-                write(file, dbit, 'x')
-                write(file, dbit, 'y')
-                write(file, dbit, 'z')
+            with open (directory + "/" + str(dbit.lbit0.tr) + str(dbit.lbit1.tr) + ".dbit", 'wb') as file:
+                write (file, dbit, 'x')
+                write (file, dbit, 'y')
+                write (file, dbit, 'z')
                 
-                write(file, dbit, 'lbit0', 'tr')
-                write(file, dbit, 'lbit0', 'data')
-                write(file, dbit, 'lbit0', 'x')
-                write(file, dbit, 'lbit0', 'y')
-                write(file, dbit, 'lbit0', 'z')
-                write(file, dbit, 'lbit0', 'other')
+                write (file, dbit, 'lbit0', 'tr')
+                write (file, dbit, 'lbit0', 'data')
+                write (file, dbit, 'lbit0', 'x')
+                write (file, dbit, 'lbit0', 'y')
+                write (file, dbit, 'lbit0', 'z')
+                write (file, dbit, 'lbit0', 'other')
                 
-                write(file, dbit, 'lbit1', 'tr')
-                write(file, dbit, 'lbit1', 'data')
-                write(file, dbit, 'lbit1', 'x')
-                write(file, dbit, 'lbit1', 'y')
-                write(file, dbit, 'lbit1', 'z')
-                write(file, dbit, 'lbit1', 'other')
+                write (file, dbit, 'lbit1', 'tr')
+                write (file, dbit, 'lbit1', 'data')
+                write (file, dbit, 'lbit1', 'x')
+                write (file, dbit, 'lbit1', 'y')
+                write (file, dbit, 'lbit1', 'z')
+                write (file, dbit, 'lbit1', 'other')
 
     @staticmethod
-    def deserialize():
+    def deserialize(xrequest, yrequest, zrequest):
 
-        wl = WorldLattice()
+        directory = file_path_for_coords(xrequest, yrequest, zrequest)
+
+        wl = WorldLattice(xrequest, yrequest, zrequest)
         
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        latdir = os.listdir(directory)
+
         # Loop through all files in the directory
-        for filename in os.listdir(directory):
+        for filename in latdir:
             file_path = os.path.join(directory, filename)
 
             # Check if it's a file (not a directory)
@@ -85,6 +107,11 @@ class WorldLattice:
                     lbit1other = pickle.load(file)
                     
                     # lbit1 = am.LBit(lbit1tr, lbit1other, lbit1x, lbit1y, lbit1z)
+
+                    # create a dictionary of lbits
+                    #
+                    #  HERE
+                    #
 
                     rv = wl.am.insert(lbit0data, x, y, z)
 
