@@ -20,7 +20,9 @@
 
 import requests
 import os
-from mapsloader import WorldLattice, AlgorithmicMemory
+from Satellite import earth_sat_com as sat0
+from modules.mapsloader import WorldLattice
+from modules import AlgorithmicMemory
 from math import cos, sin, radians
 
 def geocode_address(address, api_key):
@@ -66,7 +68,7 @@ def get_altitude_for_multiple_locations(locations, api_key):
     altitudes = [result['elevation'] for result in results]
     return altitudes
 
-precision_factor = 1000
+precision_factor = 100000
 
 # Main script to populate lattice and visualize
 def initializeLattice(city = None, region = None):
@@ -74,7 +76,10 @@ def initializeLattice(city = None, region = None):
     if city is None:
         start_address = "3508 Red Rock Dr, Moab UT 84532"
     else:
-        start_address = city + ", " + region
+        if region is None:
+            start_address = city
+        else:
+            start_address = city + ", " + region
     # start_address = "Herald Square, New York, NY"
     # start_address = "ul. Jacka Szarskiego 20a, 30-698 Krakow, Poland"
     start_lat, start_lon = geocode_address(start_address, GOOGLE_API_KEY)
@@ -84,10 +89,10 @@ def initializeLattice(city = None, region = None):
     spacing = 100 / 3.28084  # 100 feet to meters
 
     # Initialize lattice
-    try:
-        lattice = WorldLattice.WorldLattice.deserialize('lat_test0.dat')
-    except FileNotFoundError as e:
-        lattice = WorldLattice.WorldLattice('lat_test0.dat')
+    # try:
+    #     lattice = WorldLattice.WorldLattice.deserialize('lat_test0.dat')
+    # except FileNotFoundError as e:
+    #     lattice = WorldLattice.WorldLattice('lat_test0.dat')
 
     # Create a list of (lat, lon) tuples for the grid points
     locations = []
@@ -104,22 +109,33 @@ def initializeLattice(city = None, region = None):
     # Fetch altitudes for all locations in a single API call
     altitudes = get_altitude_for_multiple_locations(locations, GOOGLE_API_KEY)
 
-    # print(altitudes)
+    for i in range(len(altitudes)):
+        print(locations[i], altitudes[i])
 
     x_lat = int(locations[0][0] * precision_factor)
     y_lon = int(locations[0][1] * precision_factor)
     z_alt = int(altitudes[0])
 
+    print("MapsLoader base coords: ", x_lat, y_lon, z_alt)
+
+    sat0_lattice = sat0.ping(x_lat, y_lon, z_alt)
+
+    if sat0_lattice.am.dbit_list:
+        return sat0_lattice
+
+    # print (sat0_lattice)
     # print(x_lat, y_lon, z_alt)
 
     # Insert dbits into the lattice with the fetched altitude data
     for (lat, lon), alt in zip(locations, altitudes):
-        int_lat = int(lat * precision_factor) - x_lat
-        int_lon = int(lon * precision_factor) - y_lon
-        int_alt = int(alt) - z_alt
-        dbit = lattice.am.retrieve(int_lat, int_lon, int_alt)
-        if dbit is None:
-            lattice.insert({
+        int_lat = int(lat * precision_factor)
+        int_lon = int(lon * precision_factor)
+        print("MapsLoader base dims: ", lat, lon)
+        print("MapsLoader inserting dims: ", int_lat, int_lon)
+        int_alt = int(alt)
+        # dbit = sat0_lattice.am.retrieve(int_lat, int_lon, int_alt)
+        # if dbit is None:
+        sat0_lattice.insert({
                 'type' : 'map_vertex',
                 'lat' :lat,
                 'lon' :lon,
@@ -127,15 +143,15 @@ def initializeLattice(city = None, region = None):
                 }, int_lat, int_lon, int_alt)
 
     # Visualize the lattice
-    lattice.serialize()
+    # lattice.serialize()
     # lattice.visualize_lattice()
     # # in_development lattice.serialize()
 
-    latticecopy = WorldLattice.WorldLattice.deserialize('lat_test0.dat')
+    # latticecopy = WorldLattice.WorldLattice.deserialize('lat_test0.dat')
 
-    latticecopy.visualize_lattice()
+    # latticecopy.visualize_lattice()
 
-    return latticecopy
+    return sat0_lattice
 
     # In memory browser:
     # AlgorithmicMemory.inspectDBit( latticecopy.am.last_rv, latticecopy.am )

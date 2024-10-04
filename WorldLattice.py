@@ -2,7 +2,7 @@ import os
 import pickle
 import matplotlib
 import matplotlib.pyplot as plt
-from mapsloader import AlgorithmicMemory as am
+from modules import AlgorithmicMemory as am
 matplotlib.use('WebAgg')
 
 main_directory = 'dbits'
@@ -21,7 +21,7 @@ class WorldLattice:
 
     def insert(self, data, x, y, z):
 
-        return self.am.insert(data, x-self.x,  y-self.y, z-self.z)
+        return self.am.insert(data, self.x - x,  self.y - y, self.z - z)
 
     def get(self, x, y, z):
 
